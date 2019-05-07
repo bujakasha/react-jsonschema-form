@@ -42,6 +42,8 @@ node_modules/
 # Optional npm cache directory
 .npm
 
+_trash
+
 # Optional eslint cache
 .eslintcache
 

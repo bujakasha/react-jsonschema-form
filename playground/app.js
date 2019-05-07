@@ -439,6 +439,7 @@ class App extends Component {
             </div>
           </div>
         </div>
+
         <div className="col-sm-7">
           <Editor
             title="JSONSchema"
@@ -472,6 +473,7 @@ class App extends Component {
               ObjectFieldTemplate={ObjectFieldTemplate}
               liveValidate={liveSettings.validate}
               disabled={liveSettings.disable}
+              showErrorList={false}
               schema={schema}
               uiSchema={uiSchema}
               formData={formData}
