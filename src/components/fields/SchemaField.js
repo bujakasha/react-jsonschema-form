@@ -10,9 +10,8 @@ import {
   deepEquals,
 } from "../../utils";
 import UnsupportedField from "./UnsupportedField";
-import { List, ListItem } from "semantic-ui-react";
+import { List, ListItem, Form } from "semantic-ui-react";
 
-const REQUIRED_FIELD_SYMBOL = "*";
 const COMPONENT_TYPES = {
   array: "ArrayField",
   boolean: "BooleanField",
@@ -42,19 +41,6 @@ function getFieldComponent(schema, uiSchema, idSchema, fields) {
           />
         );
       };
-}
-
-function Label(props) {
-  const { label, required, id } = props;
-  if (!label) {
-    // See #312: Ensure compatibility with old versions of React.
-    return <div />;
-  }
-  return (
-    <label className="control-label" htmlFor={id}>
-      {required ? label + REQUIRED_FIELD_SYMBOL : label}
-    </label>
-  );
 }
 
 function Help(props) {
@@ -102,6 +88,7 @@ function DefaultTemplate(props) {
     label,
     children,
     errors,
+    containsErrors,
     help,
     description,
     hidden,
@@ -113,13 +100,17 @@ function DefaultTemplate(props) {
   }
 
   return (
-    <div className={classNames}>
-      {displayLabel && <Label label={label} required={required} id={id} />}
+    <Form.Field
+      id={id}
+      className={classNames}
+      required={required}
+      error={containsErrors}>
+      {(displayLabel && <label htmlFor={id}> {label} </label>) || <div />}
       {displayLabel && description ? description : null}
       {children}
       {errors}
       {help}
-    </div>
+    </Form.Field>
   );
 }
 
@@ -223,15 +214,7 @@ function SchemaFieldRender(props) {
   const errors = __errors;
   const help = uiSchema["ui:help"];
   const hidden = uiSchema["ui:widget"] === "hidden";
-  const classNames = [
-    "form-group",
-    "field",
-    `field-${type}`,
-    errors && errors.length > 0 ? "error" : "",
-    uiSchema.classNames,
-  ]
-    .join(" ")
-    .trim();
+  const classNames = [`field-${type}`, uiSchema.classNames].join(" ").trim();
 
   const fieldProps = {
     description: (
@@ -245,6 +228,7 @@ function SchemaFieldRender(props) {
     help: <Help help={help} />,
     rawHelp: typeof help === "string" ? help : undefined,
     errors: <ErrorList errors={errors} />,
+    containsErrors: (errors && errors.length > 0) || false,
     rawErrors: errors,
     id,
     label,
