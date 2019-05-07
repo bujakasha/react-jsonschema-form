@@ -1,49 +1,37 @@
-import React from "react";
-import PropTypes from "prop-types";
-
-import { asNumber, guessType } from "../../utils";
-
-const nums = new Set(["number", "integer"]);
-
 /**
  * This is a silly limitation in the DOM where option change event values are
  * always retrieved as strings.
  */
-function processValue(schema, value) {
-  // "enum" is a reserved word, so only "type" and "items" can be destructured
-  const { type, items } = schema;
-  if (value === "") {
+import React from "react";
+import PropTypes from "prop-types";
+
+import { asNumber } from "../../utils";
+import { Dropdown } from "semantic-ui-react";
+import { v4 as uuid4 } from "uuid";
+
+function processValue({ type, items }, data) {
+  if (data === "") {
     return undefined;
-  } else if (type === "array" && items && nums.has(items.type)) {
-    return value.map(asNumber);
+  } else if (
+    type === "array" &&
+    items &&
+    ["number", "integer"].includes(items.type)
+  ) {
+    return data.map(asNumber);
   } else if (type === "boolean") {
-    return value === "true";
+    return data === "true";
   } else if (type === "number") {
-    return asNumber(value);
+    return asNumber(data);
   }
-
-  // If type is undefined, but an enum is present, try and infer the type from
-  // the enum values
-  if (schema.enum) {
-    if (schema.enum.every(x => guessType(x) === "number")) {
-      return asNumber(value);
-    } else if (schema.enum.every(x => guessType(x) === "boolean")) {
-      return value === "true";
-    }
-  }
-
-  return value;
+  return data;
 }
 
-function getValue(event, multiple) {
-  if (multiple) {
-    return [].slice
-      .call(event.target.options)
-      .filter(o => o.selected)
-      .map(o => o.value);
-  } else {
-    return event.target.value;
+function getValue(data, multiple) {
+  if (multiple && data !== undefined && !(data.value instanceof Array)) {
+    return [data.value];
   }
+
+  return data.value;
 }
 
 function SelectWidget(props) {
@@ -54,60 +42,62 @@ function SelectWidget(props) {
     value,
     required,
     disabled,
-    readonly,
+    readOnly,
     multiple,
-    autofocus,
+    autoFocus,
     onChange,
     onBlur,
     onFocus,
     placeholder,
   } = props;
-  const { enumOptions, enumDisabled } = options;
-  const emptyValue = multiple ? [] : "";
+  const { enumOptions } = options;
+  const dropdownOptions = [];
+
+  enumOptions.map(({ value, label }, i) => {
+    dropdownOptions.push({ key: i, value: value, text: label });
+  });
+
   return (
-    <select
-      id={id}
+    <Dropdown
+      key={uuid4()}
+      search
+      selection
+      placeholder={placeholder}
+      options={dropdownOptions}
       multiple={multiple}
-      className="form-control"
-      value={typeof value === "undefined" ? emptyValue : value}
+      defaultValue={value}
+      disabled={disabled}
       required={required}
-      disabled={disabled || readonly}
-      autoFocus={autofocus}
+      autoFocus={autoFocus}
+      readOnly={readOnly}
       onBlur={
         onBlur &&
-        (event => {
-          const newValue = getValue(event, multiple);
+        ((event, self) => {
+          const newValue = getValue(self, multiple);
           onBlur(id, processValue(schema, newValue));
         })
       }
       onFocus={
         onFocus &&
-        (event => {
-          const newValue = getValue(event, multiple);
+        ((event, self) => {
+          const newValue = getValue(self, multiple);
           onFocus(id, processValue(schema, newValue));
         })
       }
-      onChange={event => {
-        const newValue = getValue(event, multiple);
+      onChange={(event, self) => {
+        const newValue = getValue(self, multiple);
         onChange(processValue(schema, newValue));
-      }}>
-      {!multiple && schema.default === undefined && (
-        <option value="">{placeholder}</option>
-      )}
-      {enumOptions.map(({ value, label }, i) => {
-        const disabled = enumDisabled && enumDisabled.indexOf(value) != -1;
-        return (
-          <option key={i} value={value} disabled={disabled}>
-            {label}
-          </option>
-        );
-      })}
-    </select>
+      }}
+      onLabelClick={(event, self) => {
+        const newValue = getValue(self, multiple);
+        onChange(processValue(schema, newValue));
+      }}
+    />
   );
 }
 
 SelectWidget.defaultProps = {
-  autofocus: false,
+  autoFocus: false,
 };
 
 if (process.env.NODE_ENV !== "production") {
@@ -117,12 +107,16 @@ if (process.env.NODE_ENV !== "production") {
     options: PropTypes.shape({
       enumOptions: PropTypes.array,
     }).isRequired,
-    value: PropTypes.any,
+    value: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number,
+      PropTypes.array,
+    ]),
     required: PropTypes.bool,
     disabled: PropTypes.bool,
-    readonly: PropTypes.bool,
+    readOnly: PropTypes.bool,
     multiple: PropTypes.bool,
-    autofocus: PropTypes.bool,
+    autoFocus: PropTypes.bool,
     onChange: PropTypes.func,
     onBlur: PropTypes.func,
     onFocus: PropTypes.func,

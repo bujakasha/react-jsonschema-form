@@ -23,8 +23,8 @@ function DateElement(props) {
     select,
     rootId,
     disabled,
-    readonly,
-    autofocus,
+    readOnly,
+    autoFocus,
     registry,
     onBlur,
   } = props;
@@ -39,8 +39,8 @@ function DateElement(props) {
       placeholder={type}
       value={value}
       disabled={disabled}
-      readonly={readonly}
-      autofocus={autofocus}
+      readOnly={readOnly}
+      autoFocus={autoFocus}
       onChange={value => select(type, value)}
       onBlur={onBlur}
     />
@@ -51,11 +51,8 @@ class AltDateWidget extends Component {
   static defaultProps = {
     time: false,
     disabled: false,
-    readonly: false,
-    autofocus: false,
-    options: {
-      yearsRange: [1900, new Date().getFullYear() + 2],
-    },
+    readOnly: false,
+    autoFocus: false,
   };
 
   constructor(props) {
@@ -85,8 +82,8 @@ class AltDateWidget extends Component {
 
   setNow = event => {
     event.preventDefault();
-    const { time, disabled, readonly, onChange } = this.props;
-    if (disabled || readonly) {
+    const { time, disabled, readOnly, onChange } = this.props;
+    if (disabled || readOnly) {
       return;
     }
     const nowDateObj = parseDateString(new Date().toJSON(), time);
@@ -95,22 +92,18 @@ class AltDateWidget extends Component {
 
   clear = event => {
     event.preventDefault();
-    const { time, disabled, readonly, onChange } = this.props;
-    if (disabled || readonly) {
+    const { time, disabled, readOnly, onChange } = this.props;
+    if (disabled || readOnly) {
       return;
     }
     this.setState(parseDateString("", time), () => onChange(undefined));
   };
 
   get dateElementProps() {
-    const { time, options } = this.props;
+    const { time } = this.props;
     const { year, month, day, hour, minute, second } = this.state;
     const data = [
-      {
-        type: "year",
-        range: options.yearsRange,
-        value: year,
-      },
+      { type: "year", range: [1900, 2020], value: year },
       { type: "month", range: [1, 12], value: month },
       { type: "day", range: [1, 31], value: day },
     ];
@@ -125,15 +118,7 @@ class AltDateWidget extends Component {
   }
 
   render() {
-    const {
-      id,
-      disabled,
-      readonly,
-      autofocus,
-      registry,
-      onBlur,
-      options,
-    } = this.props;
+    const { id, disabled, readOnly, autoFocus, registry, onBlur } = this.props;
     return (
       <ul className="list-inline">
         {this.dateElementProps.map((elemProps, i) => (
@@ -143,34 +128,26 @@ class AltDateWidget extends Component {
               select={this.onChange}
               {...elemProps}
               disabled={disabled}
-              readonly={readonly}
+              readOnly={readOnly}
               registry={registry}
               onBlur={onBlur}
-              autofocus={autofocus && i === 0}
+              autoFocus={autoFocus && i === 0}
             />
           </li>
         ))}
-        {(options.hideNowButton !== "undefined"
-          ? !options.hideNowButton
-          : true) && (
-          <li>
-            <a href="#" className="btn btn-info btn-now" onClick={this.setNow}>
-              Now
-            </a>
-          </li>
-        )}
-        {(options.hideClearButton !== "undefined"
-          ? !options.hideClearButton
-          : true) && (
-          <li>
-            <a
-              href="#"
-              className="btn btn-warning btn-clear"
-              onClick={this.clear}>
-              Clear
-            </a>
-          </li>
-        )}
+        <li>
+          <a href="#" className="btn btn-info btn-now" onClick={this.setNow}>
+            Now
+          </a>
+        </li>
+        <li>
+          <a
+            href="#"
+            className="btn btn-warning btn-clear"
+            onClick={this.clear}>
+            Clear
+          </a>
+        </li>
       </ul>
     );
   }
@@ -183,12 +160,11 @@ if (process.env.NODE_ENV !== "production") {
     value: PropTypes.string,
     required: PropTypes.bool,
     disabled: PropTypes.bool,
-    readonly: PropTypes.bool,
-    autofocus: PropTypes.bool,
+    readOnly: PropTypes.bool,
+    autoFocus: PropTypes.bool,
     onChange: PropTypes.func,
     onBlur: PropTypes.func,
     time: PropTypes.bool,
-    options: PropTypes.object,
   };
 }
 

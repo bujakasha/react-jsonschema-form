@@ -1,5 +1,5 @@
 import React from "react";
-import * as types from "../../types";
+import PropTypes from "prop-types";
 
 import {
   getWidget,
@@ -18,68 +18,63 @@ function BooleanField(props) {
     registry = getDefaultRegistry(),
     required,
     disabled,
-    readonly,
-    autofocus,
+    readOnly,
+    autoFocus,
     onChange,
-    onFocus,
-    onBlur,
-    rawErrors,
   } = props;
   const { title } = schema;
   const { widgets, formContext } = registry;
   const { widget = "checkbox", ...options } = getUiOptions(uiSchema);
   const Widget = getWidget(schema, widget, widgets);
-
-  let enumOptions;
-
-  if (Array.isArray(schema.oneOf)) {
-    enumOptions = optionsList({
-      oneOf: schema.oneOf.map(option => ({
-        ...option,
-        title: option.title || (option.const === true ? "yes" : "no"),
-      })),
-    });
-  } else {
-    enumOptions = optionsList({
-      enum: schema.enum || [true, false],
-      enumNames:
-        schema.enumNames ||
-        (schema.enum && schema.enum[0] === false
-          ? ["no", "yes"]
-          : ["yes", "no"]),
-    });
-  }
-
+  const enumOptions = optionsList({
+    enum: [true, false],
+    enumNames: schema.enumNames || ["yes", "no"],
+  });
   return (
     <Widget
       options={{ ...options, enumOptions }}
       schema={schema}
       id={idSchema && idSchema.$id}
       onChange={onChange}
-      onFocus={onFocus}
-      onBlur={onBlur}
       label={title === undefined ? name : title}
       value={formData}
       required={required}
       disabled={disabled}
-      readonly={readonly}
+      readOnly={readOnly}
       registry={registry}
       formContext={formContext}
-      autofocus={autofocus}
-      rawErrors={rawErrors}
+      autoFocus={autoFocus}
     />
   );
 }
 
 if (process.env.NODE_ENV !== "production") {
-  BooleanField.propTypes = types.fieldProps;
+  BooleanField.propTypes = {
+    schema: PropTypes.object.isRequired,
+    uiSchema: PropTypes.object,
+    idSchema: PropTypes.object,
+    onChange: PropTypes.func.isRequired,
+    formData: PropTypes.bool,
+    required: PropTypes.bool,
+    disabled: PropTypes.bool,
+    readOnly: PropTypes.bool,
+    autoFocus: PropTypes.bool,
+    registry: PropTypes.shape({
+      widgets: PropTypes.objectOf(
+        PropTypes.oneOfType([PropTypes.func, PropTypes.object])
+      ).isRequired,
+      fields: PropTypes.objectOf(PropTypes.func).isRequired,
+      definitions: PropTypes.object.isRequired,
+      formContext: PropTypes.object.isRequired,
+    }),
+  };
 }
 
 BooleanField.defaultProps = {
   uiSchema: {},
   disabled: false,
-  readonly: false,
-  autofocus: false,
+  readOnly: false,
+  autoFocus: false,
 };
 
 export default BooleanField;
